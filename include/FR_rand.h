@@ -12,6 +12,7 @@ typedef struct {
 	int exclcount;
 } vocaloid;
 
+int compare_opcodes_len4(char a[4], char b[4]);
 void randomseArrays(int size, vocaloid *character);
 char *makeModuleString (int rand_vcl, int part_num);
 char *checkInPDcodes (char * string);
