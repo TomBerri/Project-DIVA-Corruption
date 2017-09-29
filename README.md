@@ -35,4 +35,6 @@ Within a randomised chart, sometimes a hold will appear but have no end which wi
 
 Finally, a module may infinitly be stuck loading and cause the game to crash (both on the module selection screen and when loading up a song with said broken module). I know why this bug is caused and am trying to find a work around for it.
 
+After running the exe using dsc, a file called temp_hold.bin will be present. For whatever reason, it won't remove the file even though I tell it to! You can either just leave it or delete it.
+
 Any other bugs, feel free to contact me!
