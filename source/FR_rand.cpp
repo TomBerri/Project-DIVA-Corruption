@@ -2,11 +2,25 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <windows.h>
 #include "../include/FR_rand.h"
 
+int compare_opcodes_len4(char a[4], char b[4]) {
+	/*
+	 * This is a custom strcmp method for 4 character arrays
+	 * This is used instead of strcmp because of problems were caused by input strings using NULL values.
+	 */
+	for (int z=0; z<4; z++) {
+		if (a[z] != b[z]) {
+			return -1;
+		}
+	}
+	return 0;
+}
+
 void randomiseArrays(int size, vocaloid *character) {
-	
+	/*
+	* Randomises and initialises the vocaloid structures for each part of the module 
+	*/
 	character->body = (int *) malloc(sizeof(int) * size);
 	character->hand = (int *) malloc(sizeof(int) * size);
 	character->hair = (int *) malloc(sizeof(int) * size);
@@ -54,6 +68,9 @@ void randomiseArrays(int size, vocaloid *character) {
 }
 
 char *makeModuleString (int rand_vcl, int part_num) {
+	/*
+	* Makes the char string for the inputted vocaloid and module part number
+	*/
 	const char *itm = "itm";
 	const char *vcl[6] = {"mik", "rin", "len", "luk", "mei", "kai"};
 	int num_zeros;
@@ -82,6 +99,9 @@ char *makeModuleString (int rand_vcl, int part_num) {
 }
 
 char *checkInPDcodes (char * string) {
+	/*
+	* Checks to see whether the string exists within the PDcodes.txt. If it exists then return the line from PDcodes where it exists, else return "nothing".
+	*/
 	FILE *PDcodes;
 	PDcodes = fopen("PDcodes.txt", "rb");
 	char PDcodes_line[22];
@@ -103,6 +123,12 @@ char *checkInPDcodes (char * string) {
 }
 
 char *findModulePart(char *line, vocaloid *mik, vocaloid *rin, vocaloid *len, vocaloid *luk, vocaloid *mei, vocaloid *kai) {
+	/*
+	* This is the main method used for randomising the modules/module parts. A line from the PDcodes is inputted along with all the vocaloid constructs for each character.
+	* First it extracts the module part number from the PDcodes line and then uses this to work out what body part to use later on. After that, it randomises the character
+	* and then uses the mod num to find out what part it was previously. It then uses the count (for the respective part) from the vocaloid to index the randomised array.
+	* It then checks whether the randomised module actually exists within PDcodes. If it does then use it, else decrease the count and try again.
+	*/
 	int mod_part_num;
 	char mod_part_str[3];
 	char *rest_of_line;
@@ -116,7 +142,7 @@ char *findModulePart(char *line, vocaloid *mik, vocaloid *rin, vocaloid *len, vo
 	
 	mod_part_num = strtol(mod_part_str, &rest_of_line, 10); // Converts the string to an integer
 	
-	printf("mod part: %s\n", line);
+	//printf("mod part: %s\n", line);
 	//printf("mod num: %i\n", mod_part_num);
 	
 	while(exists == 0) {
@@ -466,12 +492,12 @@ void FR_rand() {
 	char ch[4];
 	int other_code_pointer = 36204;
 	
-	char mik1[5] = {'Y', '\\', '<', 'ð', '\0'};
-	char skip1[5] = {'ÿ', 0, 0, 0, '\0'};
-	char skip3[5] = {1, 0, 0, 0, '\0'};
-	char rinitm619[5] = {'¼', '»', 'v', '¯', '\0'};
-	char end_rand[5] = {20, 'Ž', 23, 'S', '\0'};
-	char start_other[5] = {'$', 'R', '<', -123, '\0'};
+	char mik1[4] = {'Y', '\\', '<', 'ð'};
+	char skip1[4] = {'ÿ', 0, 0, 0};
+	char skip3[4] = {1, 0, 0, 0};
+	char rinitm619[4] = {'¼', '»', 'v', '¯'};
+	char end_rand[4] = {20, 'Ž', 23, 'S'};
+	char start_other[4] = {'$', 'R', '<', -123};
 			
 	int fr_size, code_index = 12, i, j, stop_checking;
 	
@@ -494,12 +520,7 @@ void FR_rand() {
 	randomiseArrays(150, &kaito);
 	
 	if (fr == NULL) {
-      perror("Error while opening the firstread.bin!\n");
-      exit(EXIT_FAILURE);
-	}
-	
-	if (PDcodes == NULL) {
-      perror("Error while opening the PDcodes.txt!\n");
+      perror("Error while opening firstread.bin.\n");
       exit(EXIT_FAILURE);
 	}
 	
@@ -509,38 +530,32 @@ void FR_rand() {
 	
 	for (i=0; i<fr_size; i+=4) {
 		fread(&ch, sizeof(char), 4, fr);
-		
-		if (strcmp(ch, mik1) == 0) {
+
+		if (compare_opcodes_len4(ch, mik1) == 0) {
 			fseek(fr, -strlen(ch), SEEK_CUR);
-			printf("part 1 ok!\n");
+			//fprintf(stderr, "part 1 ok!\n");
 			break;
 		}
 		
 		fwrite(&ch, sizeof(char), 4, rand_fr);
 	}
 
-	for (i=i+0; i<fr_size; i+=4) {
+	fr_size = fr_size - i;
+
+	for (i=0; i<fr_size; i+=4) {
 		fread(&ch, sizeof(char), 4, fr);
 		
-		if (strcmp(ch, end_rand) == 0) {
-			printf("stop!\n");
+		if (compare_opcodes_len4(ch, end_rand) == 0) {
+			//printf("stop!\n");
 			fseek(fr, -strlen(ch), SEEK_CUR);
 			break;
 		
-		} else if (strcmp(ch, skip1) == 0 || strcmp(ch, skip3) == 0) {
-			printf("skipping\n");
+		} else if (compare_opcodes_len4(ch, skip1) == 0 || strcmp(ch, skip3) == 0) {
+			//printf("skipping\n");
 			other_code_pointer -= 4;
 			fwrite(&ch, sizeof(char), 4, rand_fr);
 			continue;
 		
-		} else if (ch[0] == 0 || ch[1] == 0) {
-			printf("nah ah\n");
-			fwrite(&ch, sizeof(char), 4, rand_fr);
-			fseek(fr, other_code_pointer, SEEK_CUR);
-			fread(&ch, sizeof(char), 4, fr);
-			fwrite(&ch, sizeof(char), 4, ids);
-			fseek(fr, -other_code_pointer-4, SEEK_CUR);
-			continue;
 		}
 
 		//printf("input ch: %s\n", ch);
@@ -571,7 +586,7 @@ void FR_rand() {
 			
 				
 			if (strstr(PDcodes_checker, "rinitm618") != NULL) {
-				printf("yay!");
+				//printf("yay!");
 				
 				fwrite(&skip1, sizeof(char), 4, rand_fr);
 				fwrite(&ch, sizeof(char), 4, ids);
@@ -596,16 +611,19 @@ void FR_rand() {
 			fseek(fr, -other_code_pointer-4, SEEK_CUR);
 		}
 		
-		printf("pointer to ids: %i\n", other_code_pointer);
-		printf("---\n");
+		//printf("pointer to ids: %i\n", other_code_pointer);
+		//printf("---\n");
+		//printf("i = %i and fr_size = %i\n", i, fr_size);
 	}
 	
-	for (i=i+0; i<fr_size; i+=4) {
+	fr_size = fr_size - i;
+
+	for (i=0; i<fr_size; i+=4) {
 		fread(&ch, sizeof(char), 4, fr);
 		
 		if (strcmp(ch, start_other) == 0) {
 			fseek(fr, -strlen(ch), SEEK_CUR);
-			printf("part 2 ok!\n");
+			//printf("part 2 ok!\n");
 			break;
 		}
 		
@@ -628,12 +646,14 @@ void FR_rand() {
 		fwrite(&ch, sizeof(char), 4, rand_fr);	
 	}
 	
-	for (i=i+0; i<fr_size; i+=4) {
+	fr_size = fr_size - i;
+
+	for (i=0; i<fr_size; i+=4) {
 		fread(&ch, sizeof(char), 4, fr);
 		fwrite(&ch, sizeof(char), 4, rand_fr);
 	}
 	
-	printf("Finished!\n");
+	printf("Finished!");
 	fclose(ids);
 	fclose(fr);
 	fclose(PDcodes);
