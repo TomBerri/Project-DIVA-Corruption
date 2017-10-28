@@ -18,7 +18,7 @@ int compare_opcodes_len12(char a[12], char b[12]) {
 	return 0;
 }
 
-void getRandomTarget(FILE *DSC, FILE *randDSC , int DSC_size) {
+void getRandomTarget(FILE *DSC, FILE *randDSC , int DSC_size, int mode) {
 	/*
 	 * The "big boy" method which randomises the inputed DSC and outputs a new randomised DSC.
 	 * This method searches for any standard target (face buttons, doubles and star) with a random standard target.
@@ -41,24 +41,51 @@ void getRandomTarget(FILE *DSC, FILE *randDSC , int DSC_size) {
 			fread(&dsc_read, sizeof(char), 4, DSC);
 	
 			if (dsc_read[0] < 8 || (dsc_read[0] == 12)) { // If the target is a face button, double or star, randomise, write to randDSC, add 4 to i
-				do {
-					rand_target = rand() % 13;
-				} while (rand_target > 7 && rand_target < 12);
-				dsc_read[0] = rand_target;
-				fwrite(&dsc_read, sizeof(char), 4, randDSC);
-				i+=4;
+				if (mode == 0) { // Anarchy mode
+
+					do {
+						rand_target = rand() % 13;
+					} while (rand_target > 7 && rand_target < 12);
+					dsc_read[0] = rand_target;
+					fwrite(&dsc_read, sizeof(char), 4, randDSC);
+					i+=4;
 				
-			} else if ((dsc_read[0] > 8 && dsc_read[0] < 12) || (dsc_read[0] > 24 && dsc_read[0] < 29)) { // If the target is a hold or rush, randomise, write to randDSC, add 4 to i
+				} else { // Standard Randomise
+					
+					if (dsc_read[0] < 4 || dsc_read[0] == 12) { //If the target is a face button or star, randomise one of those, write to randDSC, add 4 to i
+						do {
+							rand_target = rand() % 13;
+						} while (rand_target > 3 && rand_target < 12);
+						dsc_read[0] = rand_target;
+						fwrite(&dsc_read, sizeof(char), 4, randDSC);
+						i+=4;
+					} else {
+						do {
+							rand_target = rand() % 13;
+						} while (rand_target > 3 && rand_target < 12);
+						if (rand_target < 4) {
+							rand_target += 4;
+						}
+						dsc_read[0] = rand_target;
+						fwrite(&dsc_read, sizeof(char), 4, randDSC);
+						i+=4;
+					} 
+					
+				}
+				
+			} else if ((dsc_read[0] > 8 && dsc_read[0] < 12) || (dsc_read[0] > 24 && dsc_read[0] < 29) || (dsc_read[0] == 17)) { // If the target is a hold or rush, randomise, write to randDSC, add 4 to i
 				char random_target[4] = {0, 0, 0, 0};
 				char opcode_finder[12];
 				char dsc_write[4]; // This is now used to read from DSC whilst in this condition. DSC read is used to store the target read in earlier.
 								
-				rand_target = rand() % 8;
+				rand_target = rand() % 9;
 				
 				if (rand_target < 4) {
 					rand_target += 8;
+				} else if (rand_target == 4) {
+					rand_target = 17;
 				} else {
-					rand_target += 21;
+					rand_target += 20;
 				}
 				
 				random_target[0] = rand_target;
@@ -83,7 +110,7 @@ void getRandomTarget(FILE *DSC, FILE *randDSC , int DSC_size) {
 				
 					i = i + j;
 				
-				} else if ((dsc_read[0] > 7 && dsc_read[0] < 12) && (rand_target > 24 && rand_target < 29)) { // If the target read in is a hold and the randomised target is a rush...
+				} else if ((dsc_read[0] > 7 && dsc_read[0] < 12) && ((rand_target > 24 && rand_target < 29) || (rand_target == 17))) { // If the target read in is a hold and the randomised target is a rush...
 					for (j=0; j<DSC_size; j+=4) { // This for loop essentially removes the end hold target from the DSC and replaces the start hold target for a rush target
 						
 						fread(&opcode_finder, sizeof(char), 12 , DSC);
@@ -122,7 +149,7 @@ void getRandomTarget(FILE *DSC, FILE *randDSC , int DSC_size) {
 					
 					i = i + j + k;
 					
-				} else if ((dsc_read[0] > 24 && dsc_read[0] < 29) && (rand_target > 7 && rand_target < 12)) { // If the target read in is a rush and the randomised target is a hold...
+				} else if (((dsc_read[0] > 24 && dsc_read[0] < 29) || (dsc_read[0] == 17)) && (rand_target > 7 && rand_target < 12)) { // If the target read in is a rush and the randomised target is a hold...
 					FILE *temp_hold_end;
 					temp_hold_end = fopen("temp_hold.bin", "wb");
 					fwrite(&target_opcode, sizeof(char), 4, temp_hold_end);
@@ -223,7 +250,7 @@ void getRandomTarget(FILE *DSC, FILE *randDSC , int DSC_size) {
 	}
 }
 
-void DSC_rand() {
+void DSC_rand(int mode) {
 	
 	/*
 	* This is a method used to cycle through all encrypted (DIVAFILE) DSCs located next to the exe. It then decrypts them all (provided the DIVAFILE_Tool.exe is available) and saves them
@@ -244,7 +271,7 @@ void DSC_rand() {
 
 	CreateDirectory("Decrypted_PDX_DSCs", NULL); // Creates a directory for the decrypted DSCs if one doesn't already exist
 
-	for (x=701; x<831; x++) { // Cycles through all possible DSCs in X, if it exists next to the exe, then decrypt and save it, else continue to the next filename
+	for (x=701; x<899; x++) { // Cycles through all possible DSCs in X, if it exists next to the exe, then decrypt and save it, else continue to the next filename
 		for(y=0; y<4; y++) {
 			char *DSC_name = (char *) calloc(18, (sizeof(char) * 18));
 			char str_DSC_num[4];
@@ -277,7 +304,7 @@ void DSC_rand() {
 		}
 	}
 
-	for (x=701; x<831; x++) { // Cycles through all possible DSCs in X, if it exists in the Decrypted_PDX_DSCs, randomise it and save it in the PDRX Files folder, else continue to the next filename
+	for (x=701; x<899; x++) { // Cycles through all possible DSCs in X, if it exists in the Decrypted_PDX_DSCs, randomise it and save it in the PDRX Files folder, else continue to the next filename
 		for(y=0; y<4; y++) {
 			char *DSC_name = (char *) calloc(18, (sizeof(char) * 18));
 			char *DSC_path_name = (char *) calloc(40, (sizeof(char) * 40));
@@ -312,7 +339,7 @@ void DSC_rand() {
 			int DSC_size = ftell(DSC);
 			rewind(DSC);
 
-			getRandomTarget(DSC, randDSC, DSC_size);
+			getRandomTarget(DSC, randDSC, DSC_size, mode);
 
 			free(DSC_name);
 			free(DSC_path_name);
