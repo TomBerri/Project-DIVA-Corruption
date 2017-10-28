@@ -22,7 +22,7 @@ Get the DSCs you want to randomise from the data.psarc and place them in the sam
 
 Make sure the DIVAFILE_Tool.exe is also in the same location as the exe and DSCs
 
-Run the PDRX.exe in the command prompt with the argument "dsc" (without quotations).
+Run the PDRX.exe in the command prompt with the argument "dsc a" (without quotations) for complete randomness with face and doubles being randomised or "dsc s" for standard randomisation where face buttons only get randomised as another face button or star and same principle for doubles.
 
 Now you will have 2 new folders. One folder called Decrypted_PDX_DSCs which contains all of the decrypted DSCs you have next to the PDRX.exe. This allows you to delete the encrypted DSCs next to the PDRX.exe and instead use these ones. 
 
