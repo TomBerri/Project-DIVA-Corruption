@@ -29,11 +29,9 @@ Now you will have 2 new folders. One folder called Decrypted_PDX_DSCs which cont
 The other folder called PDRX Files will contain the randomised DSCs.
 
 # Known Bugs
-Sometimes the face of a module will not show up, currently unsure why this is happening at this time but not game breaking thankfully.
+Sometimes the modules will be missing parts of their body. This is due to how certain modules are made for example, Urotander Ranger with Helmet has no face for the module, so if something gets randomised on that slot, it will have no face.
 
 Within a randomised chart, sometimes a hold will appear but have no end which will cause you to MISS every other target. This makes the chart unplayable and will have to be re-randomised. Working on a fix for this issues currently.
-
-Finally, a module may infinitly be stuck loading and cause the game to crash (both on the module selection screen and when loading up a song with said broken module). I know why this bug is caused and am trying to find a work around for it.
 
 After running the exe using dsc, a file called temp_hold.bin will be present. For whatever reason, it won't remove the file even though I tell it to! You can either just leave it or delete it.
 
